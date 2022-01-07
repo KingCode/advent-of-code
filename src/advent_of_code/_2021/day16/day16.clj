@@ -43,17 +43,23 @@
 ;; decision to use a multi method in part 1 (see `parse-body` below).
 ;; However even with only two types, in this case a multi-method feels right. 
 
-;; We model a packet after its semantics: a decoded packet is a triple 
+;; Some vocabulary items first, just to avoid confusion:
+;;    - Bits, rather than bytes, are the primitive material in and out of 
+;;      parsing funtions, because of their arbitrary granularity not aligned 
+;;      with byte size multiples. 
+;;    - A packet is a rendered triple, the result of decoding raw bytes
+;;    - A value is the payload, or last element of a packet
+
+;; We model a packet as follows:
 ;;
 ;;   [version-id type-id value]
 ;;
-;; where the value can be a sequential collection of nested packets
-;; and so forth.
+;; where the value is either a literal or a sequence of packets.
 
 ;; A sequence of bits behaves as a stream and so parsing it requires 
 ;; 'moving the tape' and consuming some of it to produce packets. 
-;; To emulate this, a parse result consists of a decoded packet and the 
-;; unconsumed remaining which are fed back in recursively. 
+;; To emulate this, a parse result consists of a packet and the 
+;; unconsumed remaining bits which are fed back in recursively. 
 
 ;; As an aside, the `case` and `cond` macro are especially well suited 
 ;; without a default clause to make branching bugs more obvious. 
