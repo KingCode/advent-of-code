@@ -80,7 +80,7 @@
   (let [[mode rbits] (split-str-at 1 bits)]
     (case mode
       "0" (parse-subsize rbits)
-      (parse-subcount rbits))))
+      "1"(parse-subcount rbits))))
 
 (defn parse-header [bits]
   (let [[vid nov-bits] (parse-n-field 3 bits)
