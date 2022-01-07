@@ -61,8 +61,8 @@
 ;; To emulate this, a parse result consists of a packet and the 
 ;; unconsumed remaining bits which are fed back in recursively. 
 
-;; As an aside, the `case` and `cond` macro are especially well suited 
-;; without a default clause to make branching bugs more obvious. 
+;; As an aside, the `case`  macro without a default clause is especially 
+;; well suited both for speed and to make branching bugs easier to detect. 
 
 (defn parse-n-field [n bits]
   (let [[fld bits] (split-str-at n bits)]
@@ -80,7 +80,7 @@
   (let [[mode rbits] (split-str-at 1 bits)]
     (case mode
       "0" (parse-subsize rbits)
-      "1"(parse-subcount rbits))))
+      "1" (parse-subcount rbits))))
 
 (defn parse-header [bits]
   (let [[vid nov-bits] (parse-n-field 3 bits)
