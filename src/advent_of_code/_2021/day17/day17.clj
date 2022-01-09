@@ -71,11 +71,20 @@
 
 ;; https://en.wikipedia.org/wiki/Projectile_motion#Kinematic_quantities_of_projectile_motion
 
+;; although the solution doesn't require it per se.
+
+;; Before going on, to make reading more fluid the following terms are used 
+;; throughout the comments:
+;;
+;;      v0, vx0, vy0 -> (x,y), x and y initial velocities resp.
+;;      vx<t> e.g. vx1 -> the x velocity at time t
+;;      yLow, yHi, xLow, xHi -> the target border coordinates
+  
 ;; From the problem statement and diagramming, the following can be observed
 ;; when the initial y velocity vy0 is positive:
 ;;
 ;; 1) In order to reach the maximum height, the initial y velocity vy0 must be 
-;;   positive, e.g. even though intial velocities (10 -1) are successful,
+;;   positive, e.g. even though intial velocities (10 -1) are successful:
 ;;
 ;;            (show 10 -1 sample 5) 
 ;;
@@ -84,13 +93,14 @@
 ;;
 ;;            (show 7 9 sample 5) 
 ;;
-;; 2) Multiple paths can reach the maximum height, e.g. in the example at least
-;;   (6 9) (7 9) reach the target
+;; 2) Multiple paths can reach the maximum height - in the example at least
+;;   (6 9) (7 9) reach the target.
 ;;
 ;; 3) After a certain time the horizontal displacement doesn't change, i.e.
-;;   the projectile falls vertically (vx decrements then stays at zero). 
+;;   the projectile falls vertically (vx decrements, then stays at zero). 
 ;;   So vx must have a minimum value no matter the value of vy: since we know
-;;   the target value's left border xLow we have vx0 s.t.
+;;   the target value's left border xLow we have vx0 such that
+;;
 ;;       vx0 + vx1 + ... + 0 >= xLow  =>
 ;;       vx0 + (vx0-1) + (vx0-2) + ... + 0 >= xLow =>
 ;;       (vx0 . (vx0 + 1)) / 2 >= xLow    
@@ -104,21 +114,22 @@
 ;;
 ;; 6) More importantly, the highest speed occurs when the bottom of the target 
 ;;   is reached. And in turn, the higher the drop the greater the speed. 
-;;   So the maximum height will cause the bottom of the target to be hit
-;;   (any greater height causes a miss). Conversely, a lower height may still
+;;   So the maximum height will cause the bottom of the target to be hit.
+;;   Any greater height causes a miss; conversely, a lower height may still
 ;;   hit the target bottom, but will create at least one point between the x-axis
 ;;   and the bottom, e.g.  velocities (6 3) and (6 4) in the example:  
 ;;
 ;;      (show 6 3 sample 5)
 ;;      (show 6 4 sample 5) 
 ;;   
-;;  The insight leads us to conjecture that the maximum height can be reached
-;;  only when vy becomes |yLow| upon crossing the x-axis. Furthermore, we can
-;;  backtrack the steps leading to the target bottom, all the way to the step
-;;  where vy = 0 in order to find the peak. Since we are interested in the 
-;;  distance between the x-axis and maxY, we add up the steps above x-axis:
+
+;;  The observations lead us to conjecture that the maximum height can be reached
+;;  only when vy becomes |yLow| upon crossing the x-axis. Moreover, we can
+;;  trace back the steps which led to the target bottom all the way to the step
+;;  where vy = 0, the peak. Since we are interested in the distance between the 
+;;  x-axis and maxY, we discount the step reaching the target bottom:
 ;; 
-;;     base = |yLow| - 1 (from y-velocity rules)
+;;     base = |yLow| - 1 
 ;;     maxY = base + (base-1) + (base-2) + ... + (base - base)
 ;;     => maxY = base.(base+1)/2  
 
@@ -167,8 +178,9 @@
 
 ;; So in the samples 6 <= vx <= 30 and -10 <= vy <= 9
 
-;; Now let's look at them in sorting order:
-;;
+;; Now let's look at how the v0 values are distributed
+;; or grouped:
+
 (defn get-vys [sorted-velos vx]
   (let [vx= (fn [[vx-kand vy]]
               (= vx vx-kand))] 
@@ -214,15 +226,15 @@
 ;; We can see that the vx coordinates mostly follow each other in a couple  
 ;; of cluster when ordered: 6..15 and 20..30
 ;; The vy coordinates are always in a single, tight range for each vx, but
-;; the range changes often, depending on the vx. Intuitively, the higher 
-;; the vx, the lower the corresponding vy in order not to overshoot; starting with
-;; vx = 10 aiming down is necessary.
+;; their ranges change more often compared to the vx values. Intuitively,
+;; the higher the vx, the lower the corresponding vy must be in order not 
+;; to overshoot and miss; starting with vx = 10, aiming down is necessary.
 ;;
-;; Can we determine the velocity ranges directly from the input? This would allow
-;; us to consider a somewhat managed combinatorial (brute-force) approach on that
-;; limited range. Before going further, let's see if it is worth it at least on 
-;; the exmple: 
-;;
+;; Can we determine the velocity ranges directly from the input? This would
+;; allow us to consider a somewhat managed combinatorial (brute-force) approach
+;; on that limited range. Before going further, let's see if it is worth it
+;; at least on the exmple: 
+  
 (defn ->range [lo hi]
   (range lo (inc hi)))
 
@@ -247,12 +259,15 @@
 ;;=> "Elapsed time: 5.99749 msecs"
 ;;   112
 
-;; Reasonable, so let's try to find out a way to deduce the velocity raange from
+;; Reasonable, so let's try to find out a way to deduce the velocity range from
 ;; the target...
 ;;
-;; We already know vy's upper bound from part 1 and from observation 6). 
+;; We already know vy's upper bound from part 1 and from observation 6): 
+;;        vy <= |yLow| - 1. 
+;;
+;;             Y Initial Velocity Boundaries
 ;; For vy's lower bound, we observe in the example that it is the same as 
-;; the value of the bottom border of the target - can we generalize?
+;; the value of the top border of the target - can we generalize?
 ;;  
 ;; CLAIM: vyO must be at least yLow.
 ;; Proof: Suppose vy0 < yLow. 
@@ -263,6 +278,8 @@
 ;; A corollary to vy0's lower bound is that velocities using yLow must have 
 ;; a vx large enough to reach the target on the first step.
 ;;
+
+;;             X Initial Velocity Boundaries
 ;; For the vx0 boundaries, the upper boundary is obviously xHi, the right 
 ;; target border, or the first step will overshoot.
 ;;
@@ -288,16 +305,16 @@
                        (#(Math/sqrt %)))
         pos-ntr (-> 1 - (+ right-term))
         neg-ntr (-> 1 - (- right-term))]
-    (-> (filter pos? [pos-ntr neg-ntr]) 
-        first
+
+    (-> (filter pos? [pos-ntr neg-ntr]) first
         (/ 2) 
-        (#(Math/ceil %))
-        int)))
+        (#(Math/ceil %)) int)))
 
 (defn vrange [{{xlo 0} :x {xhi 1} :x
                {ylo 0} :y {yhi 1} :y :as tgt}]
   [[(lowest-vx0 tgt) xhi]
    [ylo (-> ylo abs dec)]])
+
 
 ;; Is this manageable? Let's find out:
 
