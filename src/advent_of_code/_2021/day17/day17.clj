@@ -108,7 +108,7 @@
 ;; 4) The maximum height is reached when vy becomes zero 
 ;;    vy = 0 at time t[max-height]
 ;;
-;; 5) the y position touches the x axis twice, last on its way back down before  
+;; 5) The y position touches the x axis twice, last on its way back down before  
 ;;   hitting the target. This makes sense, since the velocity decreases upward
 ;;   then increases downward by the same amount.
 ;;
@@ -223,17 +223,19 @@
 ;;       29 (-10 -9 -8 -7 -6 -5)
 ;;       30 (-10 -9 -8 -7 -6 -5)
 
-;; We can see that the vx coordinates mostly follow each other in a couple  
-;; of cluster when ordered: 6..15 and 20..30
-;; The vy coordinates are always in a single, tight range for each vx, but
-;; their ranges change more often compared to the vx values. Intuitively,
-;; the higher the vx, the lower the corresponding vy must be in order not 
-;; to overshoot and miss; starting with vx = 10, aiming down is necessary.
+;; - We can see that the vx coordinates mostly follow each other within 
+;;   two clusters, 6..15 and 20..30.
 ;;
+;; - The vy coordinates are always in a single, tight range for each vx, but
+;;   their ranges change more often compared to the vx values. Intuitively,
+;;   the higher the vx, the lower the corresponding vy must be in order not 
+;;   to overshoot and miss; starting with vx = 10, aiming down is necessary.
+  
 ;; Can we determine the velocity ranges directly from the input? This would
 ;; allow us to consider a somewhat managed combinatorial (brute-force) approach
-;; on that limited range. Before going further, let's see if it is worth it
-;; at least on the exmple: 
+;; on that limited range.
+;;
+;; Before going further, let's see if it is worth it, at least on the exmple: 
   
 (defn ->range [lo hi]
   (range lo (inc hi)))
@@ -259,17 +261,19 @@
 ;;=> "Elapsed time: 5.99749 msecs"
 ;;   112
 
-;; Reasonable, so let's try to find out a way to deduce the velocity range from
-;; the target...
+;; Reasonable, so let's see if there is a way to deduce the velocity range from
+;; the target.
+
+  
+;;             Y Initial Velocity Boundaries
 ;;
 ;; We already know vy's upper bound from part 1 and from observation 6): 
 ;;        vy <= |yLow| - 1. 
 ;;
-;;             Y Initial Velocity Boundaries
 ;; For vy's lower bound, we observe in the example that it is the same as 
 ;; the value of the top border of the target - can we generalize?
 ;;  
-;; CLAIM: vyO must be at least yLow.
+;; Claim: vyO must be at least yLow.
 ;; Proof: Suppose vy0 < yLow. 
 ;;        Then as the velocity increases negatively after each step,
 ;;        the first step's velocity will cause its location to be below 
@@ -280,17 +284,20 @@
 ;;
 
 ;;             X Initial Velocity Boundaries
+;;
 ;; For the vx0 boundaries, the upper boundary is obviously xHi, the right 
 ;; target border, or the first step will overshoot.
 ;;
 ;; For the lower vx0 boundary, we have seen in observation 3) above that if vy0
 ;; is positive vx0 must be large enough to align (or pass) the left border wall 
 ;; when the projectile crosses the x-axis, so we determine vx0 from it:
+;;
 ;;      (vx0 . (vx0+1)) / 2 = xLow =>
 ;;      vx0^2 + vx0 = 2 . xLow  =>
 ;;      a^2 + a + (-2.xLow) = 0  where a = vx0 
 ;;
 ;; and we have a solvable quadratic equation:
+;;
 ;;   vx0 = a = [-1 +/- sqrt(1 - 4.(-2.xLow))]/2
 ;;
 ;; which we round up to the next integer.
@@ -316,20 +323,23 @@
    [ylo (-> ylo abs dec)]])
 
 
-;; Is this manageable? Let's find out:
-
-(complexity (vrange input))
-;;=> 7192
-
-;; ouch! Let's try it in the repl, and be ready to shut it down if running amock..
 (defn answer2 [input]
   (-> input vrange (brute-force-hitcount input)))
 
+
 (answer2 sample)
 ;;=> 112
+
+;; Is the input manageable using brute force? Let's find out:
+
+(complexity (vrange input))
+;;=> 41296
+
+;; Let's try it in the repl, and be ready to shut it down if it runs amock..
+;; It turns out the worry was for naught:
+
 (time (answer2 input))
 ;;=> "Elapsed time: 547.979948 msecs"
 ;;  2986
-
-
-;; ....Grooovy!....err, Clojure! This is fast enough and accurate.
+;;
+;; ....Grooovy!....err, Clojure! Moving on...
