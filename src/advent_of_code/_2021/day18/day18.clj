@@ -282,12 +282,11 @@
 ;; "Elapsed time: 18888.508435 msecs"
 ;; 4563
 
-;; This makes sense, as persistent data structures' updates - which zippes are - 
-;; even though fast, yield a new instance on each call, be it up or creating a
-;; new zipper. To go faster, one probably would need a transient version which could
-;; perform all updates as mutations within a specific scope. 
+;; This makes sense after all, as persistent data structures' updates (including 
+;; zippes) even though fast, yield a new instance after each update. 
+;; To go faster, one probably would need one with in-place mutations.
      
-;; What about a concurrent approach? 
+;; We can also parallelize whenever possible, e.g. with `pmap`: 
 
 (defn answer2-concurrent [input & [use-rewind? zip-it?]]
   (->> input by-pairs
@@ -314,4 +313,4 @@
 ;;  4563
 
 
-;; Much better indeed, with almost a 2/3 speed-up. 
+;; That is a much better choice - almost a 2/3 speed-up. 
