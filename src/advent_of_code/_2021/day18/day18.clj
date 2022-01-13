@@ -42,30 +42,26 @@
 ;; clojure zipper. 
 ;;
 ;; ...After doing some exploratory work (see ns day18/explore), it turns out that
-;; the zipper is the right tool for this job. However, mixing indexes and 
-;; index-agnostic techonologies causes a "crossing chasms" problem: even though
-;  collecting indexes is easy enough when looking for a leftmost element with 
-;; some characteristic, this all comes crashing down when looking for an element
-;; relative to another. When looking for the nearest number of a pair on either
-;; side of a zipper location, one has no idea how the target's index is built up,
-;; as indexes are hierarchical pointers - and we are lost deep inside the said
-;; hierarchy, as we travelled from the nested pair location using the zipper API,
-;; not indexes. And therefore if we are going to use zippers, it will be much,
-;; much easier to do the updates as we travel inside. Fortunately, zippers make it
-;; easy to do so, once acquainted with their behaviour. 
-
-;; For our purpose, the secret sauce is the ubiquitous `prev` and
-;; `next` functions, which allow travelling from end to end almost without
-;; concern. The nesting level detection feature as it turns out in this case,
-;; is provided by the zipper location's path: the :ppnodes lists the number
-;; of containers, the number of which yields the nesting depth.
+;; the zipper a good tool for the job. However, mixing indexes and 
+;; index-agnostic techonologies causes a "crossing chasms". The indexes are easy 
+;; enough to figure out when we start at the top (zipper roo). However the index
+;; of the next node in a depth-first traversal is another matter entirely, because
+;; its level may not relative to the current node other than known direct neighbours
+;; (sidewyas up or down), illustrated by the search for the closest number 
+;; through layers of nested containers. 
+;; 
+;; So avoid it is much better if using the zipper API, to rely on it entirely.
+;; For our purpose, the special sauce is made of the ubiquitous `prev` and
+;; `next` functions, which allow travelling from end to end without having to 
+;; pay any concern to the specific structure, other than go left (prev) or
+;; right (next). For the 4-nested test we simply look at the number of parent
+;; nodes in the path of the zipper location. 
 
 ;; The only maintenance required while zipper-traveling is the need to remember
-;; the distance travelled between some nodes of interest, in those cases where
-;; we need to know how far to travel back to do further updates in another
-;; part of the structure: for example, after updating the left-number during
-;; an explode, the right-number location can only be accessed by going through 
-;; the (formerly) nested pair location.
+;; the distance travelled between some nodes of interest. Specifically, after 
+;; updating the closest left number, the exact same path in the opposite direction
+;; must be used to travel to the right number on the other side, via the  
+;; exploded location.
 
 (defn atomic-pair? [v]
   (and (coll? v)
@@ -227,14 +223,12 @@
 ;;; PART 2
 ;;
 
-;; We need to actually compute the sums for each
-;; possible pair of snailfish numbers in the input
-;; in both directions, and keep the highest.
-;;
-;; In part 1, we created a new zipper for each reduce operation,
-;; which could be costly here, so a new option has been
-;; added to `reduce` and `sum` to return the wound-up zipper
-;; as well as the result (in the case of sum)
+;; A combinatorial version of Part 1. Each 2-combination of
+;; the input  is reduced and the highest magnitude is the result.
+
+;; In part 1, a new zipper was created for each reduce operation.
+;; A new option has been added to use a single zipper per snailfish 
+;; number throughout, to see if it might improve performance.
 
 (defn zip-magnitude [z]
   (magnitude (root z)))
