@@ -1,6 +1,9 @@
 (ns advent-of-code.util.common
   (:require [advent-of-code.util.cond-let :refer [cond-let]]))
 
+(defn abs [x]
+  (if (<= 0 x) x (- x)))
+
 (defn cons-all
 "Useful for initiating a lazy-seq with cons'es.
  Creates a seq using cons"
@@ -165,3 +168,11 @@
            (coll? x ))
 )]
     (step coll [])))
+
+
+(defn positions [coll]
+  (->> coll
+       (into {} (comp 
+                 (map-indexed vector)
+                 (map reverse)
+                 (map vec)))))

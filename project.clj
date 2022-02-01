@@ -13,6 +13,7 @@
                  [org.clojure/data.priority-map "1.1.0"]
                  [fibonacci-heap-wrapper "0.1.0-SNAPSHOT"]
                  [criterium "0.4.6"]
+                 [com.taoensso/tufte "2.2.0"]
                  [jline "2.11"]]
 
   :resource-paths ["resources"]
